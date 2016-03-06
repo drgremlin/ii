@@ -168,7 +168,7 @@ public class TermController {
         return convertToPlainObjects(related, (entity, map) -> map.remove("content"));
     }
 
-//    @RequestMapping(value = "/", method = POST)
+    //    @RequestMapping(value = "/", method = POST)
 //    @Model
     public Term add(String name, String description) {
         return add(name, null, description);
