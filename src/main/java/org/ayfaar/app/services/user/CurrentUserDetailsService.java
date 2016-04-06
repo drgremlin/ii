@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 
-@Service("userDetailsService")
+@Service("currentUserDetailsService")
 public class CurrentUserDetailsService implements UserDetailsService{
     private final UserDao userDao;
 
@@ -29,6 +29,9 @@ public class CurrentUserDetailsService implements UserDetailsService{
     @Override
     public CurrentUser loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userDao.getUserByEmail(email);
+        if ( user == null ) {
+            throw new UsernameNotFoundException("User with name " + email + " not found");
+        }
         return new CurrentUser(user);
     }
 }

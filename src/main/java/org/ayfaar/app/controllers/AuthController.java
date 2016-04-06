@@ -1,31 +1,35 @@
 package org.ayfaar.app.controllers;
 
-import org.ayfaar.app.dao.UserDao;
-import org.ayfaar.app.dao.impl.UserDaoImpl;
 import org.ayfaar.app.model.CurrentUser;
 import org.ayfaar.app.model.User;
 
 import org.ayfaar.app.model.UserRoleEnum;
 import org.ayfaar.app.services.user.CurrentUserDetailsService;
 import org.ayfaar.app.services.user.UserServiceImpl;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationManager;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
 @RestController
 @RequestMapping("api/auth")
-public class AuthController {
+public class AuthController{
     UserPresentation userPresentation = new UserPresentation();
 
     CurrentUserDetailsService currentUserDetailsService;
@@ -39,7 +43,7 @@ public class AuthController {
     String name;
     ResponseEntity responseEntity;
     List<String> list = new ArrayList<>();
-    @RequestMapping(method = RequestMethod.POST)
+    @RequestMapping(method = RequestMethod.POST)//consumes = {"application/json"}
     /**
      * Регистрируем нового пользователя и/или (если такой уже есть) назначаем его текущим для этой сессии
      */
@@ -80,14 +84,16 @@ public class AuthController {
 //        userPresentation.verified = requestParams.get("verified");
 //        userPresentation.authProvider = requestParams.get("auth_provider");
 
-        createOrUpdateUser();
+        createOrUpdateUser(); //Обновляем или сохраняем в базу
+        setAuthentication(userPresentation.email, userPresentation.firstname);//Аутентификация
 
     }
 
-    @RequestMapping(value = "/current-user")
-    public UserPresentation getCurrentUser() {
-        currentUserDetailsService.loadUserByUsername(userPresentation.email);
-        return userPresentation;
+    @RequestMapping(value = "/current-user")//Сейчас возвращается РОЛЬ
+    public Collection<GrantedAuthority> getCurrentUser() {
+        CurrentUser currentUser = currentUserDetailsService.loadUserByUsername(userPresentation.email);
+        Collection<GrantedAuthority> authorities = currentUser.getAuthorities();
+        return authorities;
     }
 
     public class UserPresentation {
@@ -169,19 +175,47 @@ public class AuthController {
 //        }
     }
 
-
-    @RequestMapping(value = "/principal")
-    public String principal(Principal principal, Model model) {
-        model.addAttribute("content", "Principal: " + (principal == null ? "null" : principal.getName()));
-        name = principal.getName();
-        return name;
-    }
-
     @Inject
     UserServiceImpl userService;
 
     public void createOrUpdateUser(){
         userService.createOrUpdate(userPresentation);
-    } //тут сначала я сделал чтоб сразу create юзера, но потом переделал с userPresentation, если надо вернем назад))
+    }
 
+    @RequestMapping(value = "/auth_user")//для проверки доступен ли principal
+    public String authenticatedUser(){
+        String username;
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails) {
+            username = ((UserDetails)principal).getUsername();
+        } else {
+            username = principal.toString();
+        }
+        if(SecurityContextHolder.getContext().getAuthentication().isAuthenticated()) {
+            return username + " is Authenticated";
+        }else return username + " is not Authenticated";
+
+    }
+
+    //Аутентификация
+    private AuthenticationManager authenticationManager;
+
+    public Authentication setAuthentication(String name, String password) {
+
+        authenticationManager = new SampleAuthenticationManager();
+        Authentication request = new UsernamePasswordAuthenticationToken(name, password, getCurrentUser());
+        Authentication result = authenticationManager.authenticate(request);
+        SecurityContextHolder.getContext().setAuthentication(result);
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    class SampleAuthenticationManager implements AuthenticationManager {
+
+        public Authentication authenticate(Authentication auth) throws AuthenticationException {
+
+                return new UsernamePasswordAuthenticationToken(auth.getName(),
+                        auth.getCredentials(), getCurrentUser());
+
+        }
+    }
 }

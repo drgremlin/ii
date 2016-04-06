@@ -1,6 +1,8 @@
 package org.ayfaar.app.model;
 
-public enum UserRoleEnum {
+import org.springframework.security.core.GrantedAuthority;
+
+public enum UserRoleEnum{
 
     ADMIN,
     USER,
@@ -9,5 +11,6 @@ public enum UserRoleEnum {
 
     UserRoleEnum() {
     }
+
 
 }
