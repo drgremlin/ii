@@ -1,4 +1,4 @@
-package org.ayfaar.app.spring.authentication.provider;
+package org.ayfaar.app.spring.authentication;
 
 import org.ayfaar.app.model.CurrentUser;
 import org.ayfaar.app.services.user.CurrentUserDetailsService;
@@ -14,30 +14,25 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 
-@Component
+
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    @Autowired
-    private CurrentUserDetailsService currentUserDetailsService;
+    private LoginServiceProvider externalServiceAuthenticator;
+
+    public CustomAuthenticationProvider(LoginServiceProvider externalServiceAuthenticator) {
+        this.externalServiceAuthenticator = externalServiceAuthenticator;
+    }
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String username = (String) authentication.getPrincipal();//(String) authentication.getPrincipal();//authentication.getName();
-        String password = authentication.getCredentials().toString();
+        String username = (String) authentication.getPrincipal();
+        String password = (String) authentication.getCredentials();
 
-        CurrentUser user = currentUserDetailsService.loadUserByUsername(username);
-
-        if (user == null || !user.getUsername().equalsIgnoreCase(username)) {
-            throw new BadCredentialsException("Username not found.");
+        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+            throw new BadCredentialsException("Invalid Domain User Credentials");
         }
 
-        if (!password.equals(user.getPassword())) {
-            throw new BadCredentialsException("Wrong password.");
-        }
-
-        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
-
-        return new UsernamePasswordAuthenticationToken(user, password, authorities);
+        return externalServiceAuthenticator.authenticate(username, password);
     }
 
     @Override

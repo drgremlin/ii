@@ -41,7 +41,7 @@ public class AuthController{
     String name;
     ResponseEntity responseEntity;
     List<String> list = new ArrayList<>();
-    @RequestMapping(method = RequestMethod.POST)//consumes = {"application/json"}
+//    @RequestMapping(method = RequestMethod.POST)//consumes = {"application/json"}
     /**
      * Регистрируем нового пользователя и/или (если такой уже есть) назначаем его текущим для этой сессии
      */
@@ -83,7 +83,7 @@ public class AuthController{
 //        userPresentation.authProvider = requestParams.get("auth_provider");
 
         createOrUpdateUser(); //Обновляем или сохраняем в базу
-        setAuthentication(userPresentation.email, userPresentation.firstname);//Аутентификация
+        Authentication authentication = setAuthentication(userPresentation.email, userPresentation.firstname);//Аутентификация
 
     }
 
