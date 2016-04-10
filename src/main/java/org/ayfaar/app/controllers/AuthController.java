@@ -4,19 +4,15 @@ import org.ayfaar.app.dao.BasicCrudDao;
 import org.ayfaar.app.dao.UserDao;
 import org.ayfaar.app.model.User;
 import org.ayfaar.app.services.moderation.AccessLevel;
-import org.ayfaar.app.services.user.CustomUserService;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.ayfaar.app.utils.authentication.CustomAuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.List;
 
 @RestController
 @RequestMapping("api/auth")
@@ -27,13 +23,13 @@ public class AuthController {
     @Inject
     BasicCrudDao<User> basicCrudDao;
     @Inject
-    CustomUserService customUserService;
+    CustomAuthenticationProvider customAuthenticationProvider;
 
     @RequestMapping(method = RequestMethod.POST)
     /**
      * Регистрируем нового пользователя и/или (если такой уже есть) назначаем его текущим для этой сессии
      */
-    public void auth(User user) throws IOException{//@RequestParam Map<String,String> requestParams) throws IOException {
+    public void auth(User user) throws IOException{
         /**
          Пример входных данных (requestParams):
 
@@ -53,9 +49,16 @@ public class AuthController {
         setAuthentication(user);
     }
 
-    private void createOrUpdateUser(User user){//Обновляем или сохраняем в базу
+    private void createOrUpdateUser(User user){
         user.setRole(AccessLevel.ROLE_EDITOR);
         basicCrudDao.save(user);
+    }
+
+    public User getCurrentUser(){
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof User) {
+            return (User) principal;
+        }else return null;
     }
 
     @RequestMapping("current")
@@ -63,26 +66,11 @@ public class AuthController {
         return currentUser;
     }
 
-    //Аутентификация
-    private List<GrantedAuthority> getAuthorities(String email) {
-        List<GrantedAuthority> authorities = customUserService.loadUserByUsername(email).getAuthorities();
-        return authorities;
-    }
-
     private Authentication setAuthentication(User user) {
-        AuthenticationManager authenticationManager;
-        authenticationManager = new SampleAuthenticationManager();
-        Authentication request = new UsernamePasswordAuthenticationToken(user, null, getAuthorities(user.getEmail()));
-        Authentication result = authenticationManager.authenticate(request);
-        SecurityContextHolder.getContext().setAuthentication(result);
+
+        Authentication request = new UsernamePasswordAuthenticationToken(user, null);
+        Authentication authentication = customAuthenticationProvider.authenticate(request);
+        SecurityContextHolder.getContext().setAuthentication(authentication);
         return SecurityContextHolder.getContext().getAuthentication();
-    }
-
-    class SampleAuthenticationManager implements AuthenticationManager {
-
-        public Authentication authenticate(Authentication auth) throws AuthenticationException {
-
-            return new UsernamePasswordAuthenticationToken(auth.getPrincipal(), auth.getCredentials(), auth.getAuthorities());
-        }
     }
 }

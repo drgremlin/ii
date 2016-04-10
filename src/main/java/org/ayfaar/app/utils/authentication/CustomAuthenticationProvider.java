@@ -1,32 +1,23 @@
 package org.ayfaar.app.utils.authentication;
 
 
-import org.ayfaar.app.model.CustomUser;
-import org.ayfaar.app.services.user.CustomUserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.ayfaar.app.model.User;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
-    @Autowired
-    private CustomUserService userService;
-
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String email = (String) authentication.getPrincipal();
-
-        CustomUser user = userService.loadUserByUsername(email);
-        Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
-
-        return new UsernamePasswordAuthenticationToken(email, null, authorities);
+        User user = (User)authentication.getPrincipal();
+        Collection<? extends GrantedAuthority> authorities = AuthorityUtils.createAuthorityList(user.getRole().toString());
+        return new UsernamePasswordAuthenticationToken(user, null, authorities);
     }
 
     @Override
