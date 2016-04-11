@@ -5,7 +5,22 @@ public enum AccessLevel {
 
     private int precedence;
 
-    AccessLevel(int precedence) {
+    private AccessLevel(int precedence) {
         this.precedence = precedence;
+    }
+
+
+    public static AccessLevel fromPrecedence(int precedence) {
+        for (AccessLevel accessLevel : AccessLevel.values()) {
+            if (accessLevel.getPrecedence() == precedence) {
+                return accessLevel;
+            }
+        }
+        return null;
+    }
+
+
+    public int getPrecedence() {
+        return precedence;
     }
 }
