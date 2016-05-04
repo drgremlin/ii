@@ -5,6 +5,7 @@ import org.ayfaar.app.model.VideoResource;
 import org.ayfaar.app.repositories.VideoResourceRepository;
 import org.ayfaar.app.services.moderation.Action;
 import org.ayfaar.app.services.moderation.ModerationService;
+import org.ayfaar.app.services.videoResource.VideoResourceService;
 import org.ayfaar.app.utils.GoogleService;
 import org.ayfaar.app.utils.Language;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,7 @@ public class VideoResourcesController {
     @Inject VideoResourceRepository videoResourceRepository;
     @Inject GoogleService youtubeService;
     @Inject ModerationService moderationService;
+    @Inject VideoResourceService videoResourceService;
 
     @RequestMapping("{id}")
     public VideoResource get(@PathVariable String id) throws Exception {
@@ -60,6 +62,7 @@ public class VideoResourcesController {
             AuthController.getCurrentUser().ifPresent(u -> video.setCreatedBy(u.getId()));
             commonDao.save(video);
             moderationService.notice(Action.VIDEO_ADDED, video.getTitle(), video.getUri());
+            videoResourceService.reload();
             return video;
         });
     }
@@ -71,6 +74,7 @@ public class VideoResourcesController {
         if (video != null) {
             video.setTitle(title);
             commonDao.save(video);
+            videoResourceService.reload();
         }
     }
 

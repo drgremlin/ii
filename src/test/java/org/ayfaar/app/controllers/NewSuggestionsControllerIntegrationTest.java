@@ -56,13 +56,14 @@ public class NewSuggestionsControllerIntegrationTest extends IntegrationTest {
     public void testDocuments() {
         String query = "ос";
         Map<String, String> suggestions = suggestionsControllerNew.suggestions(query,false,false,false,true,false);
-        assertEquals(4, suggestions.size());
+        assertEquals(5, suggestions.size());
         Object[] items = suggestions.values().toArray();
         // тест последовательности
-        assertTrue(items[0].toString().toLowerCase().indexOf(query) > 0);// Мотивация как механизм работы самосознания
-        assertTrue(items[1].toString().toLowerCase().indexOf(query) > 0); // Состояние Наблюдателя или познакомьтесь с самим собой
-        assertTrue(items[2].toString().toLowerCase().indexOf(query) == 0); // Осознанность – наш компас в  многомирии и ключ к гармоничной жизни (Дррааоллдлисс)
-        assertTrue(items[3].toString().toLowerCase().indexOf(query) > 0); // Выдержки из книги Хосе Стивенса «Приручи своих Драконов. Как обратить недостатки в достоинства»
+        assertTrue(items[0].toString().toLowerCase().indexOf(query) > 0);// Ииссиидиология (основные сведения)
+        assertTrue(items[1].toString().toLowerCase().indexOf(query) > 0);// Мотивация как механизм работы самосознания
+        assertTrue(items[2].toString().toLowerCase().indexOf(query) > 0); // Состояние Наблюдателя или познакомьтесь с самим собой
+        assertTrue(items[3].toString().toLowerCase().indexOf(query) == 0); // Осознанность – наш компас в  многомирии и ключ к гармоничной жизни (Дррааоллдлисс)
+        assertTrue(items[4].toString().toLowerCase().indexOf(query) > 0); // Выдержки из книги Хосе Стивенса «Приручи своих Драконов. Как обратить недостатки в достоинства»
     }
 
     @Test
@@ -103,34 +104,37 @@ public class NewSuggestionsControllerIntegrationTest extends IntegrationTest {
     public void testAllItems() {
         String query = "ва";
         Map<String, String> suggestions = suggestionsControllerNew.suggestions(query,true, true, true, true, true);
-        assertEquals(21, suggestions.size());
+        assertEquals(22, suggestions.size());
         Object[] items = suggestions.values().toArray();
+        for (Object item : items) {
+            System.out.println(item);
+        }
         //тест последовательности
-        assertTrue(items[0].toString().toLowerCase().indexOf(query) == 0);//        Вакуум
-        assertTrue(items[1].toString().toLowerCase().indexOf(query) == 0);//        Вариативность
-        assertTrue(items[2].toString().toLowerCase().indexOf(query) == 0);//        ВААЛЛ-ВАА-ККАА
-        assertTrue(items[3].toString().toLowerCase().indexOf(query) > 0);//        ВСЕ-Пустотность-ВСЕ-Вакуумность
+        assertTrue(items[0].toString().toLowerCase().indexOf(query) == 0);//       Вакуум
+        assertTrue(items[1].toString().toLowerCase().indexOf(query) > 0);//        ЯХССВААРАА
+        assertTrue(items[2].toString().toLowerCase().indexOf(query) == 0);//        Вариативность
+        assertTrue(items[3].toString().toLowerCase().indexOf(query) == 0);//        ВААЛЛ-ВАА-ККАА
+        assertTrue(items[4].toString().toLowerCase().indexOf(query) > 0);//        ВСЕ-Пустотность-ВСЕ-Вакуумность
+        assertTrue(items[5].toString().toLowerCase().indexOf(query) == 0);//        Важность интереса
+        assertTrue(items[6].toString().toLowerCase().indexOf(query) > 0);//        Самое важное - это внутренние Состояния
+        assertTrue(items[7].toString().toLowerCase().indexOf(query) > 0);//        Алкогольная зависимость и важность интереса
+        assertTrue(items[8].toString().toLowerCase().indexOf(query) == 0);//        Варианты ближайшего будущего зависят от активности уровней самосознания
+        assertTrue(items[9].toString().toLowerCase().indexOf(query) > 0);//        На сколько мы себя знаем, понимаем и умеем прогнозировать своё поведение? Что такое эмоции и в какой степени мы осознаём их? О важности умения распознавать свои эмоции и психические состояния
 
-        assertTrue(items[4].toString().toLowerCase().indexOf(query) == 0);//        Важность интереса
-        assertTrue(items[5].toString().toLowerCase().indexOf(query) > 0);//        Самое важное - это внутренние Состояния
-        assertTrue(items[6].toString().toLowerCase().indexOf(query) > 0);//        Алкогольная зависимость и важность интереса
-        assertTrue(items[7].toString().toLowerCase().indexOf(query) == 0);//        Варианты ближайшего будущего зависят от активности уровней самосознания
-        assertTrue(items[8].toString().toLowerCase().indexOf(query) > 0);//        На сколько мы себя знаем, понимаем и умеем прогнозировать своё поведение? Что такое эмоции и в какой степени мы осознаём их? О важности умения распознавать свои эмоции и психические состояния
+        assertTrue(items[10].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 1
+        assertTrue(items[11].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 4
+        assertTrue(items[12].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 5
+        assertTrue(items[13].toString().toLowerCase().indexOf(query) > 0);//        Основы/Раздел IX/Глава 9
+        assertTrue(items[14].toString().toLowerCase().indexOf(query) > 0);//        Основы/Раздел IX/Глава 8
 
-        assertTrue(items[9].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 1
-        assertTrue(items[10].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 4
-        assertTrue(items[11].toString().toLowerCase().indexOf(query) > 0);//        БДК/Раздел III/Глава 5
-        assertTrue(items[12].toString().toLowerCase().indexOf(query) > 0);//        Основы/Раздел IX/Глава 9
-        assertTrue(items[13].toString().toLowerCase().indexOf(query) > 0);//        Основы/Раздел IX/Глава 8
+        assertTrue(items[15].toString().toLowerCase().indexOf(query) > 0);//        Мотивация как механизм работы самосознания
+        assertTrue(items[16].toString().toLowerCase().indexOf(query) > 0);//        Выдержки из книги Хосе Стивенса «Приручи своих Драконов. Как обратить недостатки в достоинства»
 
-        assertTrue(items[14].toString().toLowerCase().indexOf(query) > 0);//        Мотивация как механизм работы самосознания
-        assertTrue(items[15].toString().toLowerCase().indexOf(query) > 0);//        Выдержки из книги Хосе Стивенса «Приручи своих Драконов. Как обратить недостатки в достоинства»
-
-        assertTrue(items[16].toString().toLowerCase().indexOf(query) > 0);//        Инволюции в нашем развитии не бывает
-        assertTrue(items[17].toString().toLowerCase().indexOf(query) > 0);//        Самосознание. Часть 3. Принцип формирования «ротационного Цикла»
-        assertTrue(items[18].toString().toLowerCase().indexOf(query) > 0);//        Самое важное - это внутренние Состояния, на которых мы совершаем выборы
-        assertTrue(items[19].toString().toLowerCase().indexOf(query) > 0);//        Основы Ииссиидиологии. Что такое Энерго-Плазма. Образование Времени и Пространства
-        assertTrue(items[20].toString().toLowerCase().indexOf(query) > 0);//        Как всё появилось. Часть 3. Ирркогликтивный Импульс и образование типов бирвуляртности
+        assertTrue(items[17].toString().toLowerCase().indexOf(query) > 0);//        Инволюции в нашем развитии не бывает
+        assertTrue(items[18].toString().toLowerCase().indexOf(query) > 0);//        Самосознание. Часть 3. Принцип формирования «ротационного Цикла»
+        assertTrue(items[19].toString().toLowerCase().indexOf(query) > 0);//        Самое важное - это внутренние Состояния, на которых мы совершаем выборы
+        assertTrue(items[20].toString().toLowerCase().indexOf(query) > 0);//        Основы Ииссиидиологии. Что такое Энерго-Плазма. Образование Времени и Пространства
+        assertTrue(items[21].toString().toLowerCase().indexOf(query) > 0);//        Как всё появилось. Часть 3. Ирркогликтивный Импульс и образование типов бирвуляртности
 
     }
 }
