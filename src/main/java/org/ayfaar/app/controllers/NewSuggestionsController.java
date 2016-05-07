@@ -80,8 +80,7 @@ public class NewSuggestionsController {
         while (suggestions.size() < MAX_SUGGESTIONS && queriesQueue.peek() != null) {
             List<Map.Entry<String, String>> founded = null;
             Map<String, String> mapUriWithNames = null;
-            // fixme: в некоторых методах getAllUriNames при каждом вызове getSuggestions, происходит запрос в БД для получения всех имён, это не рационально, я бы сделал логику кеширования имён и обновления кеша в случае добавления/изменения видео или документа
-            // или можно сделать RegExp запрос в БД и тогда не нужен кеш вовсе, просто из соображений скорости я стараюсь уменьшить запросы в БД
+
             switch (item) {
                 case TERM:
                     List<TermDao.TermInfo> allInfoTerms = termService.getAllInfoTerms();
@@ -117,8 +116,7 @@ public class NewSuggestionsController {
         for (TermDao.TermInfo infoTerm : allInfoTerms) {
             String name = infoTerm.getName();
             Matcher matcher = pattern.matcher(name);
-            // fixme: suggestions не может содержать просто стринг, будь внимательней к ворнингам :)
-            if (matcher.find() && !suggestions.contains(name) && !terms.contains(name)) {
+            if (matcher.find() && !suggestions.stream().anyMatch(s -> s.getValue().equals(name)) && !temp.contains(name)) {
                 temp.add(infoTerm);
             }
         }
@@ -136,11 +134,11 @@ public class NewSuggestionsController {
         List<Map.Entry<String, String>> list = new ArrayList<>();
 
         Pattern pattern = Pattern.compile(query, CASE_INSENSITIVE + UNICODE_CASE);
-        // fixme: дублирование логики
+
         for (Map.Entry<String, String> entry : uriWithNames.entrySet()) {
             String name = entry.getValue();
             Matcher matcher = pattern.matcher(name);
-            if (matcher.find() && !suggestions.contains(name) && !list.contains(name)) {
+            if (matcher.find() && !suggestions.stream().anyMatch(s -> s.getValue().equals(name)) && !list.stream().anyMatch(s -> s.getValue().equals(name))) {
                 list.add(entry);
             }
         }

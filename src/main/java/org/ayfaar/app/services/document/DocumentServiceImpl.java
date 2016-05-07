@@ -30,6 +30,10 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public void reload() {
+        init();
+    }
+    @Override
     public Map<String, String> getAllUriNames(){
         return allDocuments.stream().collect(Collectors.toMap(document -> document.getUri(),document -> document.getName()));
     }

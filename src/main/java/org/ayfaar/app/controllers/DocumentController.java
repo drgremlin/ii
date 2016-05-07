@@ -2,6 +2,7 @@ package org.ayfaar.app.controllers;
 
 import org.ayfaar.app.dao.CommonDao;
 import org.ayfaar.app.model.Document;
+import org.ayfaar.app.services.document.DocumentService;
 import org.ayfaar.app.utils.GoogleService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -21,6 +22,7 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 public class DocumentController {
     @Inject CommonDao commonDao;
     @Inject GoogleService googleService;
+    @Inject DocumentService documentService;
 
     @RequestMapping(method = RequestMethod.POST)
     public Document create(@RequestParam String url,
@@ -42,6 +44,7 @@ public class DocumentController {
                         .icon(docInfo.iconLink)
                         .downloadUrl(docInfo.downloadUrl)
                         .build();
+                documentService.reload();
                 return commonDao.save(document);
             });
 

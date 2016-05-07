@@ -28,6 +28,10 @@ public class VideoResourceServiceImpl implements VideoResourceService {
         logger.info("Video resources loaded");
     }
     @Override
+    public void reload() {
+        init();
+    }
+    @Override
     public Map<String, String> getAllUriNames() {
         return allVideoResource.stream().collect(Collectors.toMap(videoResource ->
                 videoResource.getUri(),videoResource -> videoResource.getTitle()));
