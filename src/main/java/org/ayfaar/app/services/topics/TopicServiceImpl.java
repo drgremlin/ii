@@ -167,7 +167,7 @@ class TopicServiceImpl implements TopicService {
 
         @Override
         public Optional<? extends TopicProvider> getChild(String child) {
-            return null;//children().filter(p -> p.name().equals(child)).collect(onlyOne());
+            return children().filter(p -> p.name().equals(child)).collect(onlyOne());
         }
 
         @Override

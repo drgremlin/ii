@@ -82,7 +82,7 @@ public class NewSuggestionsController {
         while (suggestions.size() < MAX_SUGGESTIONS && queriesQueue.peek() != null) {
             List<? extends Map.Entry<String, String>> founded = null;
             Map<String, String> mapUriWithNames = null;
-            
+
             switch (item) {
                 case TERM:
                     Collection<TermDao.TermInfo> allInfoTerms = termService.getAllInfoTerms();

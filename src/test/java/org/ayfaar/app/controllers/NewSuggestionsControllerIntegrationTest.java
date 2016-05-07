@@ -106,12 +106,15 @@ public class NewSuggestionsControllerIntegrationTest extends IntegrationTest {
         Map<String, String> suggestions = suggestionsControllerNew.suggestions(query,true, true, true, true, true);
         assertEquals(22, suggestions.size());
         Object[] items = suggestions.values().toArray();
+        for (Object item : items) {
+            System.out.println(item);
+        }
         //тест последовательности
-        assertTrue(items[0].toString().toLowerCase().indexOf(query) == 0);//        Вакуум
-        assertTrue(items[1].toString().toLowerCase().indexOf(query) == 0);//        Вариативность
-        assertTrue(items[2].toString().toLowerCase().indexOf(query) == 0);//        ВААЛЛ-ВАА-ККАА
-        assertTrue(items[3].toString().toLowerCase().indexOf(query) > 0);//        ВСЕ-Пустотность-ВСЕ-Вакуумность
-        assertTrue(items[4].toString().toLowerCase().indexOf(query) > 0);//        Эгллеролифтивное дефинитирование
+        assertTrue(items[0].toString().toLowerCase().indexOf(query) == 0);//       Вакуум
+        assertTrue(items[1].toString().toLowerCase().indexOf(query) > 0);//        ЯХССВААРАА
+        assertTrue(items[2].toString().toLowerCase().indexOf(query) == 0);//        Вариативность
+        assertTrue(items[3].toString().toLowerCase().indexOf(query) == 0);//        ВААЛЛ-ВАА-ККАА
+        assertTrue(items[4].toString().toLowerCase().indexOf(query) > 0);//        ВСЕ-Пустотность-ВСЕ-Вакуумность
         assertTrue(items[5].toString().toLowerCase().indexOf(query) == 0);//        Важность интереса
         assertTrue(items[6].toString().toLowerCase().indexOf(query) > 0);//        Самое важное - это внутренние Состояния
         assertTrue(items[7].toString().toLowerCase().indexOf(query) > 0);//        Алкогольная зависимость и важность интереса
