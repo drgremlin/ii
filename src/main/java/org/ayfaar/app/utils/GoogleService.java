@@ -148,13 +148,8 @@ public class GoogleService {
             // set up the global Drive instance
             drive = new Drive.Builder(httpTransport, JSON_FACTORY, credential).setApplicationName(
                     APPLICATION_NAME).build();
-
-            // run commands
-
-            //View.header1("Starting Resumable Media Upload");
+            // run command
             File uploadedFile = uploadFile(false, url);
-
-            //View.header1("Success!");
             return;
         } catch (IOException e) {
             System.err.println(e.getMessage());
