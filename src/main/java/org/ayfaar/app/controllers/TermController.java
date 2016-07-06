@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
+import rx.Observable;
+import rx.schedulers.Schedulers;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -41,6 +43,7 @@ public class TermController {
     @Inject NewSearchController searchController;
     @Inject ItemRangeService itemRangeService;
     @Inject TermsFinder termsFinder;
+    @Inject TermSubscriber termSubscriber;
 
 
     @RequestMapping(value = "add", method = RequestMethod.POST)
@@ -251,12 +254,10 @@ public class TermController {
 //            publisher.publishEvent(new TermUpdatedEvent(term, oldShortDescription, oldDescription));
         }
 
-        final Term finalTerm = term;
-        new Thread(() -> {
-            termService.reload();
-            termsFinder.updateTermParagraphForTerm(finalTerm.getName());
-            itemRangeService.reload();
-        }).start();
+//        new Thread(() -> {
+//            termService.reload();
+//        }).start();
+        Observable.just(term.getName()).subscribeOn(Schedulers.newThread()).subscribe(termSubscriber);
 
         return term;
     }
