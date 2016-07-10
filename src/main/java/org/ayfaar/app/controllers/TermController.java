@@ -15,9 +15,12 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 import rx.Observable;
 import rx.schedulers.Schedulers;
+import rx.subjects.PublishSubject;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.util.Collections.sort;
 import static org.ayfaar.app.model.LinkType.*;
@@ -29,6 +32,7 @@ import static org.springframework.util.StringUtils.isEmpty;
 public class TermController {
 
     private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(TermController.class.getName());
+    private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
     @Autowired CommonDao commonDao;
     @Autowired TermDao termDao;
@@ -257,8 +261,16 @@ public class TermController {
 //        new Thread(() -> {
 //            termService.reload();
 //        }).start();
-        Observable.just(term.getName()).subscribeOn(Schedulers.newThread()).subscribe(termSubscriber);
+        
+        PublishSubject<String> subject = PublishSubject.create();
+        subject.observeOn(Schedulers.from(executor)).subscribe(termSubscriber);
+        subject.onNext(term.getName());
 
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         return term;
     }
 

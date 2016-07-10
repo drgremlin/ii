@@ -79,7 +79,7 @@ public class TermsFinder {
         {
             Map<String, Integer> termsWithFrequency = getTermsWithFrequency(paragraph.description(), new_term);
             termsWithFrequency.keySet().parallelStream().map(term ->
-                    new TermParagraph(paragraph.code(), term)).forEach(t ->
+                    new TermParagraph(term, paragraph.code())).forEach(t ->
                     commonDao.save(TermParagraph.class,t));
         });
     }
