@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 import rx.Observable;
+import rx.Subscriber;
 import rx.schedulers.Schedulers;
 import rx.subjects.PublishSubject;
 
@@ -47,7 +48,7 @@ public class TermController {
     @Inject NewSearchController searchController;
     @Inject ItemRangeService itemRangeService;
     @Inject TermsFinder termsFinder;
-    @Inject TermSubscriber termSubscriber;
+    @Inject Subscriber subscriber;
 
 
     @RequestMapping(value = "add", method = RequestMethod.POST)
@@ -261,9 +262,9 @@ public class TermController {
 //        new Thread(() -> {
 //            termService.reload();
 //        }).start();
-        
+
         PublishSubject<String> subject = PublishSubject.create();
-        subject.observeOn(Schedulers.from(executor)).subscribe(termSubscriber);
+        subject.observeOn(Schedulers.from(executor)).subscribe(subscriber);
         subject.onNext(term.getName());
 
         try {
