@@ -52,8 +52,8 @@ public interface ContentsService {
 
     interface ContentsProvider {
         String description();
-		Optional<String> previousUri();
-		Optional<String> nextUri();
+        Optional<String> previousUri();
+        Optional<String> nextUri();
         String code();
         String uri();
         String startItemNumber();
