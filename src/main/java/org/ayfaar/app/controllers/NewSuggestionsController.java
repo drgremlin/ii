@@ -1,5 +1,6 @@
 package org.ayfaar.app.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import one.util.streamex.StreamEx;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.ayfaar.app.dao.TermDao;
@@ -28,6 +29,7 @@ import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.UNICODE_CASE;
 
+@Slf4j
 @RestController
 @RequestMapping("api/suggestions")
 public class NewSuggestionsController {
@@ -74,7 +76,8 @@ public class NewSuggestionsController {
         for (Suggestions item : items) {
             Queue<String> queriesQueue = getQueue(q);
             for (Map.Entry<String, String> suggestion : getSuggestions(queriesQueue, item)) {
-                allSuggestions.put(suggestion.getKey(), suggestion.getValue());
+                if(suggestion.getKey().contains("ии:пункты:")) allSuggestions.put(suggestion.getKey(), filterWordsBeforeAndAfter(suggestion.getValue(), q, 3));
+                else allSuggestions.put(suggestion.getKey(), suggestion.getValue());
             }
         }
         return allSuggestions;
@@ -168,5 +171,44 @@ public class NewSuggestionsController {
             }
         }
         return query;
+    }
+
+    private String filterWordsBeforeAndAfter(String paragraph, String search, int countWordsBeforeAndAfter){
+        String wholeFind = null;
+        String searchResult = null;
+        String str = paragraph;
+        String find = search;
+
+        //check if not the full text
+        Pattern pattern = Pattern.compile("\\S*" + find + "\\S*");
+        Matcher matcher = pattern.matcher(str);
+        while (matcher.find()) {
+            wholeFind = matcher.group();
+        }
+
+        //create minimal string
+        int countWords = countWordsBeforeAndAfter;
+        String[] sp = str.split(" +"); // "+" for multiple spaces
+        List<String> strings = Arrays.asList(sp);
+        String[] findStringArr = wholeFind.split(" ");
+
+        for (int i = 0; i < sp.length; i++) {
+            if (sp[i].equals(findStringArr[0]) && sp[i + findStringArr.length-1].equals(findStringArr[findStringArr.length-1])) {
+
+                String before = "";
+                int iFirst = strings.indexOf(findStringArr[0]);
+                for (int j = countWords; j > 0; j--) {
+                    if(iFirst-j >= 0) before += sp[iFirst-j]+" ";
+                }
+
+                String after = "";
+                int iLast = strings.indexOf(findStringArr[findStringArr.length-1]);
+                for (int j = 1; j <= countWords; j++) {
+                    if(iLast+j < sp.length) after += " " + sp[iLast+j];
+                }
+                searchResult = before + wholeFind + after;
+            }
+        }
+        return searchResult;
     }
 }
