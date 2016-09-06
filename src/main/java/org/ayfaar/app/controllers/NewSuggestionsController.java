@@ -13,6 +13,7 @@ import org.ayfaar.app.services.videoResource.VideoResourceService;
 import org.ayfaar.app.utils.ContentsService;
 import org.ayfaar.app.utils.TermService;
 import org.ayfaar.app.utils.UriGenerator;
+import org.ayfaar.app.utils.contents.ContentsUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,6 +42,7 @@ public class NewSuggestionsController {
     @Autowired VideoResourceService videoResourceService;
     @Autowired RecordService recordService;
     @Autowired ItemService itemService;
+    @Autowired ContentsUtils contentsUtils;
 
     private List<String> escapeChars = Arrays.asList("(", ")", "[", "]", "{", "}");
     private static final int MAX_SUGGESTIONS = 5;
@@ -76,7 +78,10 @@ public class NewSuggestionsController {
         for (Suggestions item : items) {
             Queue<String> queriesQueue = getQueue(q);
             for (Map.Entry<String, String> suggestion : getSuggestions(queriesQueue, item)) {
-                if(suggestion.getKey().contains("ии:пункты:")) allSuggestions.put(suggestion.getKey(), filterWordsBeforeAndAfter(suggestion.getValue(), q, 3));
+                if(suggestion.getKey().contains("ии:пункты:")) {
+                    String suggestionParagraph = contentsUtils.filterWordsBeforeAndAfter(suggestion.getValue(), q, 3);
+                    if(suggestionParagraph != null)allSuggestions.put(suggestion.getKey(), suggestion.getKey().substring(10) + ":" + suggestionParagraph);
+                }
                 else allSuggestions.put(suggestion.getKey(), suggestion.getValue());
             }
         }
@@ -171,44 +176,5 @@ public class NewSuggestionsController {
             }
         }
         return query;
-    }
-
-    private String filterWordsBeforeAndAfter(String paragraph, String search, int countWordsBeforeAndAfter){
-        String wholeFind = null;
-        String searchResult = null;
-        String str = paragraph;
-        String find = search;
-
-        //check if not the full text
-        Pattern pattern = Pattern.compile("\\S*" + find + "\\S*");
-        Matcher matcher = pattern.matcher(str);
-        while (matcher.find()) {
-            wholeFind = matcher.group();
-        }
-
-        //create minimal string
-        int countWords = countWordsBeforeAndAfter;
-        String[] sp = str.split(" +"); // "+" for multiple spaces
-        List<String> strings = Arrays.asList(sp);
-        String[] findStringArr = wholeFind.split(" ");
-
-        for (int i = 0; i < sp.length; i++) {
-            if (sp[i].equals(findStringArr[0]) && sp[i + findStringArr.length-1].equals(findStringArr[findStringArr.length-1])) {
-
-                String before = "";
-                int iFirst = strings.indexOf(findStringArr[0]);
-                for (int j = countWords; j > 0; j--) {
-                    if(iFirst-j >= 0) before += sp[iFirst-j]+" ";
-                }
-
-                String after = "";
-                int iLast = strings.indexOf(findStringArr[findStringArr.length-1]);
-                for (int j = 1; j <= countWords; j++) {
-                    if(iLast+j < sp.length) after += " " + sp[iLast+j];
-                }
-                searchResult = before + wholeFind + after;
-            }
-        }
-        return searchResult;
     }
 }
