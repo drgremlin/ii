@@ -73,8 +73,7 @@ public class ImageController {
     @RequestMapping(value = "update-name", method = RequestMethod.POST)
     public void updateTitle(@RequestParam String uri, @RequestParam String title) {
         hasLength(uri);
-        Optional<Image> optImage = commonDao.getOpt(Image.class, "uri", uri);
-        Image image = optImage.get();
+        Image image = commonDao.getOpt(Image.class, "uri", uri).orElseThrow(() -> new RuntimeException("Couldn't rename, image is not defined!"));
         image.setName(title);
         commonDao.save(image);
 

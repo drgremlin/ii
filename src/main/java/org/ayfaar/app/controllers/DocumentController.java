@@ -72,8 +72,7 @@ public class DocumentController {
     @RequestMapping(value = "update-name", method = RequestMethod.POST)
     public void updateTitle(@RequestParam String uri, @RequestParam String title) {
         hasLength(uri);
-        Optional<Document> optDoc = commonDao.getOpt(Document.class, "uri", uri);
-        Document document = optDoc.get();
+        Document document = commonDao.getOpt(Document.class, "uri", uri).orElseThrow(() -> new RuntimeException("Couldn't rename, document is not defined!"));
         document.setName(title);
         commonDao.save(document);
 
