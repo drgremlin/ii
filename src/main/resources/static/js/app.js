@@ -337,6 +337,9 @@ var app = angular.module('app', ['ui.router', 'ngResource', 'ngSanitize', 'ngCoo
                 }
             },
             document: {
+                rename: function (uri,name) {
+                    return api.authPost("document/update-name", {uri:uri, title: name})
+                },
                 get: function (id) {
                     return api.get("document/"+id)
                 },
@@ -350,6 +353,9 @@ var app = angular.module('app', ['ui.router', 'ngResource', 'ngSanitize', 'ngCoo
                 }
             },
             picture: {
+                rename: function (uri,name) {
+                    return api.authPost("image/update-name", {uri:uri, title: name})
+                },
                 get: function (id) {
                     return api.get("image/"+id)
                 },
