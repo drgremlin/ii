@@ -70,27 +70,56 @@ function RecordController($scope, $stateParams, $api, messager, modal, audioPlay
 
 }
 
-function DocumentController($scope, $stateParams, $api, messager, $state) {
-    if ($stateParams.id) {
-        $scope.docLoading = true;
-        $api.document.get($stateParams.id).then(function(doc){
-            $scope.docLoading = false;
-            if (doc.id) {
-                $scope.doc = doc;
-                document.title = doc.name;
-            } else {
-                $scope.showUrlInput = true;
-            }
-        }, function(response){
-            $scope.docLoading = false;
-            messager.error("Ошибка загрузки документа");
-        });
-    } else {
-        $scope.showUrlInput = true;
-        $api.document.last().then(function (list) {
-            $scope.last = list;
+function DocumentController($scope, $stateParams, $api, messager, $state, modal) {
+    load();
+    $scope.rename = function (doc) {
+        modal.prompt("Переименование ответа", doc.name, "Переименовать").then(function (name) {
+            $api.document.rename(doc.uri,name).then(load);
         })
+    };
+
+    $scope.getMore = function () {
+        load(true);
+    };
+
+    function load(next) {
+        $scope.docLoading = true;
+        $scope.singleMode = false;
+        if (!next) {
+            $scope.last = [];
+            $scope.lastNoMore = false;
+        }
+        if ($stateParams.id) {
+            $scope.docLoading = true;
+            $api.document.get($stateParams.id).then(function(doc){
+                $scope.docLoading = false;
+                if (doc.id) {
+                    $scope.doc = doc;
+                    document.title = doc.name;
+                } else {
+                    $scope.showUrlInput = true;
+                }
+            }, function(response){
+                $scope.docLoading = false;
+                messager.error("Ошибка загрузки документа");
+            });
+        } else {
+            $scope.showUrlInput = true;
+            $api.document.last(next ? Math.ceil($scope.last.length / 10) : 0).then(function (list) {
+                $scope.docLoading = false;
+                if (!list.length && next) {
+                    $scope.lastNoMore = true;
+                    return
+                }
+                $scope.last.append(list);
+                $scope.singleMode = list.length == 1;
+                $scope.document = $scope.singleMode ? list[0] : null;
+                window.title = $scope.singleMode ? list[0].name : "Документы ответы"
+            })
+        }
     }
+
+    
     $scope.add = function(){
         $scope.docLoading = true;
         $api.document.add($scope.url).then(function(doc){
@@ -98,28 +127,58 @@ function DocumentController($scope, $stateParams, $api, messager, $state) {
         });
     };
     $scope.last = [];
+    $scope.update = function () {
+        load()
+    };
 }
-function ImageController($scope, $stateParams, $api, messager, $state) {
-    if ($stateParams.id) {
-        $scope.imgLoading = true;
-        $api.picture.get($stateParams.id).then(function(img){
-            $scope.imgLoading = false;
-            if (img.id) {
-                $scope.img = img;
-                document.title = img.name;
-            } else {
-                $scope.showUrlInput = true;
-            }
-        }, function(response){
-            $scope.imgLoading = false;
-            messager.error("Ошибка загрузки изображения");
-        });
-    } else {
-        $scope.showUrlInput = true;
-        $api.picture.last().then(function (list) {
-            $scope.last = list;
+function ImageController($scope, $stateParams, $api, messager, $state, modal) {
+    load();
+    $scope.rename = function (img) {
+        modal.prompt("Переименование ответа", img.name, "Переименовать").then(function (name) {
+            $api.picture.rename(img.uri, name).then(load);
         })
+    };
+
+    $scope.getMore = function () {
+        load(true);
+    };
+    
+    function load(next) {
+        $scope.imgLoading = true;
+        $scope.singleMode = false;
+        if (!next) {
+            $scope.last = [];
+            $scope.lastNoMore = false;
+        }
+        if ($stateParams.id) {
+            $scope.imgLoading = true;
+            $api.picture.get($stateParams.id).then(function(img){
+                $scope.imgLoading = false;
+                if (img.id) {
+                    $scope.img = img;
+                } else {
+                    $scope.showUrlInput = true;
+                }
+            }, function(response){
+                $scope.imgLoading = false;
+                messager.error("Ошибка загрузки изображения");
+            });
+        } else {
+            $scope.showUrlInput = true;
+            $api.picture.last(next ? Math.ceil($scope.last.length / 10) : 0).then(function (list) {
+                $scope.imgLoading = false;
+                if (!list.length && next) {
+                    $scope.lastNoMore = true;
+                    return
+                }
+                $scope.last.append(list);
+                $scope.singleMode = list.length == 1;
+                $scope.picture = $scope.singleMode ? list[0] : null;
+                window.title = $scope.singleMode ? list[0].name : "Изображение ответы"
+            })
+        }
     }
+    
     $scope.add = function(){
         $scope.imgLoading = true;
         $api.picture.add($scope.url).then(function(img){
@@ -127,7 +186,12 @@ function ImageController($scope, $stateParams, $api, messager, $state) {
         });
     };
     $scope.last = [];
+
+    $scope.update = function () {
+        load()
+    };
 }
+
 function TopicController($scope, $stateParams, $api, $state, modal, $topicPrompt, messager, $timeout, ngAudio, $rootScope) {
     $scope.name = $stateParams.name;
     document.title = $scope.name;
