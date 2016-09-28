@@ -138,8 +138,18 @@ function ImageController($scope, $stateParams, $api, messager, $state, modal) {
             $api.picture.rename(img.uri, name).then(load);
         })
     };
+
+    $scope.getMore = function () {
+        load(true);
+    };
     
-    function load() {
+    function load(next) {
+        $scope.imgLoading = true;
+        $scope.singleMode = false;
+        if (!next) {
+            $scope.last = [];
+            $scope.lastNoMore = false;
+        }
         if ($stateParams.id) {
             $scope.imgLoading = true;
             $api.picture.get($stateParams.id).then(function(img){
@@ -155,8 +165,16 @@ function ImageController($scope, $stateParams, $api, messager, $state, modal) {
             });
         } else {
             $scope.showUrlInput = true;
-            $api.picture.last().then(function (list) {
-                $scope.last = list;
+            $api.picture.last(next ? Math.ceil($scope.last.length / 10) : 0).then(function (list) {
+                $scope.imgLoading = false;
+                if (!list.length && next) {
+                    $scope.lastNoMore = true;
+                    return
+                }
+                $scope.last.append(list);
+                $scope.singleMode = list.length == 1;
+                $scope.picture = $scope.singleMode ? list[0] : null;
+                window.title = $scope.singleMode ? list[0].name : "Изображение ответы"
             })
         }
     }
