@@ -78,7 +78,17 @@ function DocumentController($scope, $stateParams, $api, messager, $state, modal)
         })
     };
 
-    function load() {
+    $scope.getMore = function () {
+        load(true);
+    };
+
+    function load(next) {
+        $scope.docLoading = true;
+        $scope.singleMode = false;
+        if (!next) {
+            $scope.last = [];
+            $scope.lastNoMore = false;
+        }
         if ($stateParams.id) {
             $scope.docLoading = true;
             $api.document.get($stateParams.id).then(function(doc){
@@ -95,8 +105,16 @@ function DocumentController($scope, $stateParams, $api, messager, $state, modal)
             });
         } else {
             $scope.showUrlInput = true;
-            $api.document.last().then(function (list) {
-                $scope.last = list;
+            $api.document.last(next ? Math.ceil($scope.last.length / 10) : 0).then(function (list) {
+                $scope.docLoading = false;
+                if (!list.length && next) {
+                    $scope.lastNoMore = true;
+                    return
+                }
+                $scope.last.append(list);
+                $scope.singleMode = list.length == 1;
+                $scope.document = $scope.singleMode ? list[0] : null;
+                window.title = $scope.singleMode ? list[0].name : "Документы ответы"
             })
         }
     }
