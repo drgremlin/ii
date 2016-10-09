@@ -34,8 +34,24 @@
         <a href="https://drive.google.com/uc?export=view&id={{img.id}}" target="_blank">
             <img style="width: 100%" ng-show="img.mime_type.indexOf('image') == 0" ng-src="https://drive.google.com/thumbnail?sz=w600&id={{img.id}}"/>
         </a>
-        <google-doc ng-hide="img.mime_type.indexOf('image') == 0" id="img.id"></google-doc>
+        <div class="topic-comment medium">{{img.comment}}
+            <i ng-click="updateComment(img)" class="btn glyphicon glyphicon-pencil" title="Редактировать коментарий"></i>
+        </div>
         <br>
+        <div ng-show = "commentIsEmpty">
+            <a class="btn btn-link gray" ng-hide="showAddImgComment" ng-click="showAddImgComment = !showAddImgComment">
+                <i class="glyphicon glyphicon-plus-sign"></i>
+                добавить коментарий</a>
+            <div ng-show="showAddImgComment">
+                Коментарий
+                <textarea ng-model="img.comment" rows="3" class="full-width form-control" ></textarea>
+                <br>
+                <a class="btn btn-primary" ng-click="addComment(img)" style="margin-top: 15px;">Добавить коментарий</a>
+                <a class="btn btn-link gray middle" ng-click="showAddImgComment = false">скрыть</a>
+            </div>
+        </div>
+        <br>
+        <google-doc ng-hide="img.mime_type.indexOf('image') == 0" id="img.id"></google-doc>
         <br>
         <topics owner-uri="img.uri"></topics>
     </div>

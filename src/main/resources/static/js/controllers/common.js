@@ -132,6 +132,31 @@ function DocumentController($scope, $stateParams, $api, messager, $state, modal)
     };
 }
 function ImageController($scope, $stateParams, $api, messager, $state, modal) {
+    if ($stateParams.id) {
+        $scope.imgLoading = true;
+        $scope.commentIsEmpty = true;
+
+        $api.picture.get($stateParams.id).then(function(img){
+            $scope.imgLoading = false;
+
+            if(img.comment)$scope.commentIsEmpty = false;
+            
+            if (img.id) {
+                $scope.img = img;
+                document.title = img.name;
+            } else {
+                $scope.showUrlInput = true;
+            }
+        }, function(response){
+            $scope.imgLoading = false;
+            messager.error("Ошибка загрузки изображения");
+        });
+    } else {
+        $scope.showUrlInput = true;
+        $api.picture.last().then(function (list) {
+            $scope.last = list;
+        })
+function ImageController($scope, $stateParams, $api, messager, $state, modal) {
     load();
     $scope.rename = function (img) {
         modal.prompt("Переименование ответа", img.name, "Переименовать").then(function (name) {
@@ -185,6 +210,17 @@ function ImageController($scope, $stateParams, $api, messager, $state, modal) {
             $state.goToImg(img);
         });
     };
+    $scope.addComment = function (img) {
+        $scope.commentIsEmpty = true;
+        if(img.comment)$scope.commentIsEmpty = false;
+        $api.picture.updateComment(img.uri, img.comment);
+    }
+    $scope.updateComment = function (img) {
+        modal.prompt("Комментарий", img.comment, "Переименовать").then(function (comment) {
+            $api.picture.updateComment(img.uri, comment);
+        })
+
+    }
     $scope.last = [];
 
     $scope.update = function () {

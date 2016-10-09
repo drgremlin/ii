@@ -3,10 +3,15 @@ package org.ayfaar.app.controllers;
 
 import com.google.api.services.drive.model.File;
 import lombok.extern.slf4j.Slf4j;
+import org.ayfaar.app.annotations.Moderated;
 import org.ayfaar.app.dao.CommonDao;
 import org.ayfaar.app.model.Image;
+import org.ayfaar.app.model.Topic;
 import org.ayfaar.app.services.images.ImageService;
+import org.ayfaar.app.services.links.LinkService;
+import org.ayfaar.app.services.moderation.Action;
 import org.ayfaar.app.utils.GoogleService;
+import org.ayfaar.app.utils.UriGenerator;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.util.Assert;
@@ -19,6 +24,7 @@ import java.util.Optional;
 import static org.ayfaar.app.utils.UriGenerator.generate;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.util.Assert.hasLength;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 @Slf4j
 @RestController
@@ -27,6 +33,7 @@ public class ImageController {
     @Inject CommonDao commonDao;
     @Inject GoogleService googleService;
     @Inject ImageService imageService;
+    @Inject LinkService linkService;
 
     @RequestMapping(method = RequestMethod.POST)
     public Image create(@RequestParam String url,
@@ -80,5 +87,13 @@ public class ImageController {
         commonDao.getOpt(Image.class, "id", id).ifPresent(image -> {
             commonDao.remove(image);
         });
+    }
+
+    @RequestMapping(value = "update-comment", method = RequestMethod.POST)
+    public void updateComment(@RequestParam String uri, @RequestParam String comment) {
+        hasLength(uri);
+        Image image = commonDao.getOpt(Image.class, "uri", uri).orElseThrow(() -> new RuntimeException("Couldn't update comment, image is not defined!"));
+        image.setComment(comment);
+        commonDao.save(image);
     }
 }
