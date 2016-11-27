@@ -8,6 +8,7 @@ import org.ayfaar.app.model.Image;
 import org.ayfaar.app.services.images.ImageService;
 import org.ayfaar.app.services.links.LinkService;
 import org.ayfaar.app.utils.GoogleService;
+import org.ayfaar.app.utils.SearchSuggestions;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.util.Assert;
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.ayfaar.app.utils.UriGenerator.generate;
 import static org.springframework.data.domain.Sort.Direction.DESC;
@@ -29,6 +32,7 @@ public class ImageController {
     @Inject GoogleService googleService;
     @Inject ImageService imageService;
     @Inject LinkService linkService;
+    @Inject SearchSuggestions searchSuggestions;
 
     @RequestMapping(method = RequestMethod.POST)
     public Image create(@RequestParam String url,
@@ -93,5 +97,11 @@ public class ImageController {
         Image image = commonDao.getOpt(Image.class, "uri", uri).orElseThrow(() -> new RuntimeException("Couldn't update comment, image is not defined!"));
         image.setComment(comment);
         commonDao.save(image);
+    }
+
+    @RequestMapping("search")
+    public Map<Image, String> suggestions(@RequestParam String q){
+        Map<String, String> suggestions = searchSuggestions.suggestions(q, false, false, false, false, false, false, false, false, false, true, true);
+        return suggestions.entrySet().stream().collect(Collectors.toMap(entry -> imageService.getByUri(entry.getKey()),entry -> entry.getValue()));
     }
 }
