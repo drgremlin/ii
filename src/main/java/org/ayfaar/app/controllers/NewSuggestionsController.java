@@ -37,8 +37,20 @@ import static java.util.regex.Pattern.UNICODE_CASE;
 @RequestMapping("api/suggestions")
 public class NewSuggestionsController {
 
-    @Inject
-    SearchSuggestions searchSuggestions;
+    @Inject TermService termService;
+    @Inject TopicService topicService;
+    @Inject ContentsService contentsService;
+    @Inject DocumentService documentService;
+    @Inject VideoResourceService videoResourceService;
+    @Inject RecordService recordService;
+    @Inject ItemService itemService;
+    @Inject ContentsUtils contentsUtils;
+    @Inject ImageService imageService;
+    @Inject SearchSuggestions searchSuggestions;
+
+    private List<String> escapeChars = Arrays.asList("(", ")", "[", "]", "{", "}");
+    private static final int MAX_SUGGESTIONS = 5;
+    private static final int MAX_WORDS_PARAGRAPH_AFTER_SEARCH = 4;
 
     public Map<String, String> suggestions(String q) {
         return suggestions(q, false, false, false, false, false, false, false, false, false, false);
@@ -58,9 +70,77 @@ public class NewSuggestionsController {
                                            @RequestParam(required = false, defaultValue = "true") boolean with_record_code,
                                            @RequestParam(required = false, defaultValue = "true") boolean with_images
     ) {
-
-        return searchSuggestions.suggestions(q, with_terms,with_topic, with_category_name, with_category_description, with_doc,
-                                                    with_video, with_item, with_record_name, with_record_code, with_images, false);
+        Map<String, String> allSuggestions = new LinkedHashMap<>();
+        List<Suggestions> items = new ArrayList<>();
+        if (with_terms) items.add(Suggestions.TERM); //default
+        if (with_topic) items.add(Suggestions.TOPIC);
+        if (with_category_name) items.add(Suggestions.CATEGORY_NAME);
+        if (with_category_description) items.add(Suggestions.CATEGORY_DESCRIPTION);
+        if (with_doc) items.add(Suggestions.DOCUMENT);
+        if (with_video) items.add(Suggestions.VIDEO);
+        if (with_record_name) items.add(Suggestions.RECORD_NAME);
+        if (with_record_code) items.add(Suggestions.RECORD_CODE);
+        if (with_item) items.add(Suggestions.ITEM);
+        if (with_images) items.add(Suggestions.IMAGES);
+        for (Suggestions item : items) {
+            Queue<String> queriesQueue = searchSuggestions.getQueue(q);
+            List<Map.Entry<String, String>> suggestions = getSuggestions(queriesQueue, item);
+            allSuggestions.putAll(searchSuggestions.getAllSuggestions(q,suggestions));
+        }
+        return allSuggestions;
     }
 
+    private List<Map.Entry<String, String>> getSuggestions(Queue<String> queriesQueue, Suggestions item) {
+        List<Map.Entry<String, String>> suggestions = new ArrayList<>();
+
+        while (suggestions.size() < MAX_SUGGESTIONS && queriesQueue.peek() != null) {
+            List<? extends Map.Entry<String, String>> founded = null;
+            Map<String, String> mapUriWithNames = null;
+            // fixme: в некоторых методах getAllUriNames при каждом вызове getSuggestions, происходит запрос в БД для получения всех имён, это не рационально, я бы сделал логику кеширования имён и обновления кеша в случае добавления/изменения видео или документа
+            // или можно сделать RegExp запрос в БД и тогда не нужен кеш вовсе, просто из соображений скорости я стараюсь уменьшить запросы в БД
+            switch (item) {
+                case TERM:
+                    Collection<TermDao.TermInfo> allInfoTerms = termService.getAllInfoTerms();
+                    final List<TermDao.TermInfo> suggested = searchSuggestions.getSuggested(queriesQueue.poll(), suggestions, allInfoTerms, TermDao.TermInfo::getName);
+                    founded = StreamEx.of(suggested)
+                            .map((i) -> new ImmutablePair<>(UriGenerator.generate(Term.class, i.getName()), i.getName()))
+                            .toList();
+                    break;
+                case TOPIC:
+                    mapUriWithNames = topicService.getAllUriNames();
+                    break;
+                case CATEGORY_NAME:
+                    mapUriWithNames = contentsService.getAllUriNames();
+                    break;
+                case CATEGORY_DESCRIPTION:
+                    mapUriWithNames = contentsService.getAllUriDescription();
+                    break;
+                case DOCUMENT:
+                    mapUriWithNames = documentService.getAllUriNames();
+                    break;
+                case VIDEO:
+                    mapUriWithNames = videoResourceService.getAllUriNames();
+                    break;
+                case ITEM:
+                    mapUriWithNames = itemService.getAllUriNumbers();
+                    break;
+                case RECORD_NAME:
+                    mapUriWithNames = recordService.getAllUriNames();
+                    break;
+                case RECORD_CODE:
+                    mapUriWithNames = recordService.getAllUriCodes();
+                    break;
+                case IMAGES:
+                    mapUriWithNames = imageService.getAllUriNames();
+                    break;
+            }
+            if (item != Suggestions.TERM)
+                founded = searchSuggestions.getSuggested(queriesQueue.poll(), suggestions, mapUriWithNames.entrySet(), Map.Entry::getValue);
+
+            suggestions.addAll(founded.subList(0, min(MAX_SUGGESTIONS - suggestions.size(), founded.size())));
+        }
+
+        Collections.sort(suggestions, (e1, e2) -> Integer.valueOf(e1.getValue().length()).compareTo(e2.getValue().length()));
+        return suggestions;
+    }
 }

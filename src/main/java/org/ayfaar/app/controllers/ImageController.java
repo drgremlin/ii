@@ -3,23 +3,29 @@ package org.ayfaar.app.controllers;
 
 import com.google.api.services.drive.model.File;
 import lombok.extern.slf4j.Slf4j;
+import one.util.streamex.StreamEx;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.ayfaar.app.dao.CommonDao;
+import org.ayfaar.app.dao.TermDao;
 import org.ayfaar.app.model.Image;
+import org.ayfaar.app.model.Term;
 import org.ayfaar.app.services.images.ImageService;
 import org.ayfaar.app.services.links.LinkService;
+import org.ayfaar.app.services.topics.TopicService;
 import org.ayfaar.app.utils.GoogleService;
 import org.ayfaar.app.utils.SearchSuggestions;
+import org.ayfaar.app.utils.UriGenerator;
+import org.ayfaar.app.utils.contents.ContentsUtils;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.*;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.min;
 import static org.ayfaar.app.utils.UriGenerator.generate;
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.util.Assert.hasLength;
@@ -33,6 +39,9 @@ public class ImageController {
     @Inject ImageService imageService;
     @Inject LinkService linkService;
     @Inject SearchSuggestions searchSuggestions;
+    @Inject TopicService topicService;
+
+    private static final int MAX_SUGGESTIONS = 5;
 
     @RequestMapping(method = RequestMethod.POST)
     public Image create(@RequestParam String url,
@@ -101,7 +110,41 @@ public class ImageController {
 
     @RequestMapping("search")
     public Map<Image, String> suggestions(@RequestParam String q){
-        Map<String, String> suggestions = searchSuggestions.suggestions(q, false, false, false, false, false, false, false, false, false, true, true);
-        return suggestions.entrySet().stream().collect(Collectors.toMap(entry -> imageService.getByUri(entry.getKey()),entry -> entry.getValue()));
+        Map<String, String> allSuggestions = new LinkedHashMap<>();
+        List<Suggestions> items = new ArrayList<>();
+        items.add(Suggestions.TOPIC);   //image-keywords
+        items.add(Suggestions.IMAGES);
+        for (Suggestions item : items) {
+            Queue<String> queriesQueue = searchSuggestions.getQueue(q);
+            List<Map.Entry<String, String>> suggestions = getSuggestions(queriesQueue, item);
+            allSuggestions.putAll(searchSuggestions.getAllSuggestions(q,suggestions));
+        }
+
+        return allSuggestions.entrySet().stream().collect(Collectors.toMap(entry -> imageService.getByUri(entry.getKey()),entry -> entry.getValue()));
+    }
+
+    private List<Map.Entry<String, String>> getSuggestions(Queue<String> queriesQueue, Suggestions item) {
+        List<Map.Entry<String, String>> suggestions = new ArrayList<>();
+
+        while (suggestions.size() < MAX_SUGGESTIONS && queriesQueue.peek() != null) {
+            List<? extends Map.Entry<String, String>> founded = null;
+            Map<String, String> mapUriWithNames = null;
+
+            switch (item) {
+                case TOPIC://image-keywords
+                    mapUriWithNames = imageService.getImagesKeywords();
+                    break;
+                case IMAGES:
+                    mapUriWithNames = imageService.getAllUriNames();
+                    break;
+            }
+
+            founded = searchSuggestions.getSuggested(queriesQueue.poll(), suggestions, mapUriWithNames.entrySet(), Map.Entry::getValue);
+
+            suggestions.addAll(founded.subList(0, min(MAX_SUGGESTIONS - suggestions.size(), founded.size())));
+        }
+
+        Collections.sort(suggestions, (e1, e2) -> Integer.valueOf(e1.getValue().length()).compareTo(e2.getValue().length()));
+        return suggestions;
     }
 }

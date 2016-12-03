@@ -71,6 +71,6 @@ public class ImageServiceImpl implements ImageService {
 
     @Override
     public Image getByUri(String uri){
-        return commonDao.get(Image.class, uri);
+        return allImages.stream().filter(image -> image.getUri() == uri).findFirst().get();
     }
 }
